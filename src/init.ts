@@ -1,7 +1,6 @@
 import { createInterface } from 'readline';
 import { mkdir, writeFile, copyFile } from 'fs/promises';
 import { basename, join } from 'path';
-import build from './build';
 import { dim, error, magenta, reset, success } from './util';
 import { existsSync as exists } from 'fs';
 
