@@ -4,13 +4,6 @@
     "title": "Lithor Configuration Schema",
     "type": "object",
     "properties": {
-        "mode": {
-            "title": "Mode",
-            "description": "Development or Production. Modifies the webpack configuration and whether the build files will be minified.",
-            "default": "prod",
-            "type": "string",
-            "enum": ["dev", "prod"]
-        },
         "name": {
             "title": "Name",
             "description": "Shows up in page title.",

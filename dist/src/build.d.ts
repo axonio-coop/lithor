@@ -1,1 +1,1 @@
-export default function (root?: string): Promise<void>;
+export default function (isProd: boolean): Promise<void>;

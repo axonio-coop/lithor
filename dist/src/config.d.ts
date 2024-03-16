@@ -1,5 +1,4 @@
 export interface Configuration {
-    mode: 'dev' | 'prod';
     name: string;
     commands: {
         title: {
@@ -23,4 +22,4 @@ export interface Configuration {
         open: boolean;
     };
 }
-export default function loadConfig(root?: string): Promise<Configuration>;
+export default function loadConfig(): Promise<Configuration>;

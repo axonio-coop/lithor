@@ -8,14 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const readline_1 = require("readline");
 const promises_1 = require("fs/promises");
 const path_1 = require("path");
-const build_1 = __importDefault(require("./build"));
 const util_1 = require("./util");
 const fs_1 = require("fs");
 const rl = (0, readline_1.createInterface)({
@@ -78,15 +74,15 @@ function init() {
         yield copySample(`commands/eval.${script}`, root);
         yield copySample('public/favicon.ico', root);
         yield copySample('src/pages/index.html', root);
+        yield copySample(`src/${script}/script.${script}`, root);
+        yield copySample(`src/${style}/style.${style}`, root);
         yield copySample('src/main.html', root);
         yield (0, promises_1.writeFile)((0, path_1.join)(root, 'lithor.json'), JSON.stringify({
             $schema: 'https://unpkg.com/lithor/assets/schema.json',
-            mode: 'dev',
             name: (0, path_1.basename)(root)
         }, null, 4));
         if (script == 'ts')
             yield copySample('tsconfig.json', root);
-        yield (0, build_1.default)(root);
         (0, util_1.success)(`Your ${util_1.magenta}lithor${util_1.reset} project is ready!`);
     });
 }

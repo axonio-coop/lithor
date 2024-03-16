@@ -1,2 +1,2 @@
 import { Configuration } from './config';
-export default function (config: Configuration): Promise<void>;
+export default function (config: Configuration, isProd: boolean): Promise<void>;

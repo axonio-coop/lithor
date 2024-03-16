@@ -11,7 +11,7 @@ import { blue, dim, magenta, red, reset, underscore, yellow } from './src/util';
 
     switch(process.argv[2]){
         case 'init': await init(); break;
-        case 'build': await build(); break;
+        case 'build': await build(true); break;
         case 'watch': await watch(); break;
         case 'help': help(true); break;
         case 'about': about(); break;
@@ -46,6 +46,6 @@ function about(){
     \`-----'       ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝
 
                     Made with love by ${magenta}Axónio${reset}
-                       ${dim}${underscore}https://axonio.eu${reset}`);
+                           ${dim}${underscore}axonio.pt${reset}`);
 
 }

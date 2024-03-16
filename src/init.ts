@@ -82,17 +82,16 @@ export default async function init(){
     await copySample(`commands/eval.${script}`, root);
     await copySample('public/favicon.ico', root);
     await copySample('src/pages/index.html', root);
+    await copySample(`src/${script}/script.${script}`, root);
+    await copySample(`src/${style}/style.${style}`, root);
     await copySample('src/main.html', root);
     await writeFile(join(root, 'lithor.json'), JSON.stringify({
         $schema: 'https://unpkg.com/lithor/assets/schema.json',
-        mode: 'dev',
         name: basename(root)
     }, null, 4));
 
     if(script == 'ts')
         await copySample('tsconfig.json', root);
-
-    await build(root);
 
     success(`Your ${magenta}lithor${reset} project is ready!`);
     

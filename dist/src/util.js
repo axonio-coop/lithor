@@ -74,7 +74,7 @@ function open(url) {
             (0, child_process_1.spawn)('explorer.exe', [url]);
             break;
         default:
-            warning(`Unsupported platform ${exports.yellow}${process.platform}${exports.reset}!\n - Report this issue: ${exports.dim}https://github.com/axonio-coop/lithor/issues${exports.reset}\n - Open this URL manually: ${exports.dim}${url}${exports.reset}`);
+            warning(`Unsupported platform ${exports.yellow}${process.platform}${exports.reset}!\n - Report this issue: ${exports.underscore}${exports.dim}https://github.com/axonio-coop/lithor/issues${exports.reset}\n - Open this URL manually: ${exports.underscore}${exports.dim}${url}${exports.reset}`);
             break;
     }
 }

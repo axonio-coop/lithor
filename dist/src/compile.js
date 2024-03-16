@@ -21,11 +21,11 @@ const autoprefixer_1 = __importDefault(require("autoprefixer"));
 const sass_1 = __importDefault(require("sass"));
 const clean_css_1 = __importDefault(require("clean-css"));
 const webpack_1 = require("webpack");
-function default_1(config) {
+function default_1(config, isProd) {
     return __awaiter(this, void 0, void 0, function* () {
         yield Promise.all([
-            compileJS(config),
-            compileCSS(config)
+            compileJS(config, isProd),
+            compileCSS(config, isProd)
         ]);
     });
 }
@@ -52,7 +52,7 @@ function getDestination(src) {
         .replace(/^scss/, 'css')
         .replace(/\.scss$/, '.css');
 }
-function compileJS(config) {
+function compileJS(config, isProd) {
     return __awaiter(this, void 0, void 0, function* () {
         let files = [
             ...yield findFiles(config.paths.src, 'js'),
@@ -65,7 +65,7 @@ function compileJS(config) {
         }
         yield (new Promise(res => {
             (0, webpack_1.webpack)({
-                mode: config.mode == 'dev' ? 'development' : 'production',
+                mode: isProd ? 'production' : 'development',
                 entry,
                 output: {
                     path: config.paths.build,
@@ -114,7 +114,7 @@ function compileJS(config) {
         (0, util_1.info)('  JavaScript compiled.', false);
     });
 }
-function compileCSS(config) {
+function compileCSS(config, isProd) {
     return __awaiter(this, void 0, void 0, function* () {
         let files = [
             ...yield findFiles(config.paths.src, 'css'),
@@ -130,7 +130,7 @@ function compileCSS(config) {
                     from: file,
                     to: getDestination(file)
                 })).css;
-                if (config.mode == 'prod')
+                if (isProd)
                     css = new clean_css_1.default().minify(css).styles;
                 let path = (0, path_1.join)(config.paths.build, getDestination(file));
                 yield (0, promises_1.mkdir)((0, path_1.dirname)(path), { recursive: true });

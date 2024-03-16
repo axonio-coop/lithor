@@ -31,9 +31,8 @@ function default_1() {
             res.send((yield (0, promises_1.readFile)((0, path_1.join)(__dirname, '..', '..', 'assets', 'watch-ws.js'), 'utf-8'))
                 .replace('$WS_PORT$', config.watch.wsPort.toString()));
         }));
-        app.listen(config.watch.port, () => {
-            if (config.watch.open)
-                (0, util_1.open)(`http://localhost:${config.watch.port}/`);
+        let serverReady = new Promise(res => {
+            app.listen(config.watch.port, () => res());
         });
         const wss = new ws_1.WebSocketServer({ port: config.watch.wsPort });
         wss.on('connection', ws => {
@@ -62,7 +61,7 @@ function default_1() {
         function handleChange() {
             return __awaiter(this, void 0, void 0, function* () {
                 try {
-                    yield (0, build_1.default)();
+                    yield (0, build_1.default)(false);
                     for (let ws of wss.clients) {
                         if (ws.readyState === ws_1.WebSocket.OPEN)
                             ws.send('refresh');
@@ -79,7 +78,10 @@ function default_1() {
             .on('unlink', handleChange)
             .on('addDir', handleChange)
             .on('unlinkDir', handleChange);
-        yield (0, build_1.default)();
+        yield (0, build_1.default)(false);
+        yield serverReady;
+        if (config.watch.open)
+            (0, util_1.open)(`http://localhost:${config.watch.port}/`);
     }));
 }
 exports.default = default_1;

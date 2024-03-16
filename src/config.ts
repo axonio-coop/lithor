@@ -3,7 +3,6 @@ import { basename, join } from 'path';
 import { reset, warning, yellow } from './util';
 
 export interface Configuration {
-    mode: 'dev' | 'prod';
     name: string;
     commands: {
         title: {
@@ -30,10 +29,9 @@ export interface Configuration {
 
 let warned = false;
 
-export default async function loadConfig(root?: string): Promise<Configuration> {
+export default async function loadConfig(): Promise<Configuration> {
 
-    if(!root) root = process.cwd();
-
+    let root = process.cwd();
     let config: any;
 
     try{
@@ -50,7 +48,6 @@ export default async function loadConfig(root?: string): Promise<Configuration> 
     }
 
     config = {
-        mode: config?.mode ?? 'prod',
         name: config?.name ?? basename(root),
         commands: {
             title: {
@@ -76,7 +73,6 @@ export default async function loadConfig(root?: string): Promise<Configuration> 
     }
 
     return {
-        mode: config.mode,
         name: config.name,
         commands: {
             title: {

@@ -25,10 +25,9 @@ export default function(){ return new Promise(async ()=>{
         );
     });
 
-    app.listen(config.watch.port, ()=>{
-        if(config.watch.open)
-            open(`http://localhost:${config.watch.port}/`);
-    });
+    let serverReady = new Promise<void>(res=>{
+        app.listen(config.watch.port, ()=>res());
+    })
     
     // --- ws server ---
 
@@ -70,7 +69,7 @@ export default function(){ return new Promise(async ()=>{
 
         try{
 
-            await build();
+            await build(false);
 
             for(let ws of wss.clients){
                 if(ws.readyState === WebSocket.OPEN)
@@ -90,7 +89,12 @@ export default function(){ return new Promise(async ()=>{
         .on('addDir', handleChange)
         .on('unlinkDir', handleChange);
 
-    await build();
+    await build(false);
+
+    await serverReady;
+
+    if(config.watch.open)
+        open(`http://localhost:${config.watch.port}/`);
 
 }) }
 

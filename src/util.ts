@@ -61,7 +61,7 @@ export function open(url: string){
         case 'linux': spawn('xdg-open', [ url ]); break;
         case 'win32': spawn('explorer.exe', [ url ]); break;
         default:
-            warning(`Unsupported platform ${yellow}${process.platform}${reset}!\n - Report this issue: ${dim}https://github.com/axonio-coop/lithor/issues${reset}\n - Open this URL manually: ${dim}${url}${reset}`);
+            warning(`Unsupported platform ${yellow}${process.platform}${reset}!\n - Report this issue: ${underscore}${dim}https://github.com/axonio-coop/lithor/issues${reset}\n - Open this URL manually: ${underscore}${dim}${url}${reset}`);
             break;
     }
 }

@@ -24,7 +24,7 @@ const util_1 = require("./src/util");
             yield (0, init_1.default)();
             break;
         case 'build':
-            yield (0, build_1.default)();
+            yield (0, build_1.default)(true);
             break;
         case 'watch':
             yield (0, watch_1.default)();
@@ -61,5 +61,5 @@ function about() {
     \`-----'       ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝
 
                     Made with love by ${util_1.magenta}Axónio${util_1.reset}
-                       ${util_1.dim}${util_1.underscore}https://axonio.eu${util_1.reset}`);
+                           ${util_1.dim}${util_1.underscore}axonio.pt${util_1.reset}`);
 }

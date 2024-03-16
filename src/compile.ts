@@ -9,10 +9,10 @@ import sass from 'sass';
 import CleanCSS from 'clean-css';
 import { ProvidePlugin, webpack } from 'webpack';
 
-export default async function(config: Configuration){
+export default async function(config: Configuration, isProd: boolean){
     await Promise.all([
-        compileJS(config),
-        compileCSS(config)
+        compileJS(config, isProd),
+        compileCSS(config, isProd)
     ]);
 }
 
@@ -44,7 +44,7 @@ function getDestination(src: string){
         .replace(/\.scss$/, '.css');
 }
 
-async function compileJS(config: Configuration){
+async function compileJS(config: Configuration, isProd: boolean){
 
     let files = [
         ...await findFiles(config.paths.src, 'js'),
@@ -61,7 +61,7 @@ async function compileJS(config: Configuration){
     await (new Promise<void>(res=>{
 
         webpack({
-            mode: config.mode == 'dev' ? 'development' : 'production',
+            mode: isProd ? 'production' : 'development',
             entry,
             output: {
                 path: config.paths.build,
@@ -115,7 +115,7 @@ async function compileJS(config: Configuration){
 
 }
 
-async function compileCSS(config: Configuration){
+async function compileCSS(config: Configuration, isProd: boolean){
 
     let files = [
         ...await findFiles(config.paths.src, 'css'),
@@ -141,7 +141,7 @@ async function compileCSS(config: Configuration){
             })).css;
 
             // minify
-            if(config.mode == 'prod')
+            if(isProd)
                 css = new CleanCSS().minify(css).styles;
 
             // save
