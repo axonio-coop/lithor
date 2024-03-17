@@ -27,7 +27,7 @@
                         },
                         "template": {
                             "title": "Title Templace",
-                            "description": "Define how the title displays. You can use these variables:\n`$title$` - Page title\n`$name$` - Project name",
+                            "description": "Define how the title displays. You can use these variables:\n* `$title$`: Page title\n* `$name$`: Project name",
                             "default": "$title$ · $name$",
                             "type": "string"
                         }
