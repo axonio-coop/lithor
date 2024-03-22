@@ -1,8 +1,10 @@
-<img src="assets/logo.svg" align="right" height="200" alt="Logo of a purple hexagon with lightning bolt in the middle">
-
 # Lithor
 
+<img src="assets/logo.svg" align="right" height="200" alt="Logo of a purple hexagon with lightning bolt in the middle">
+
 Lithor is a static website template engine using [Node.js](https://nodejs.org/about). With lithor you can build static websites with ease using [comment commands](https://github.com/axonio-coop/lithor/wiki/%F0%9F%92%AC-Comment-Commands) to aid your development. It supports [TypeScript](https://www.typescriptlang.org/) and [Sass](https://sass-lang.com/) and uses [Webpack](https://webpack.js.org/), [PostCSS](https://postcss.org/), [Babel](https://babeljs.io/) and other technologies under the hood.
+
+<br clear="right"/>
 
 ## Documentation
 
