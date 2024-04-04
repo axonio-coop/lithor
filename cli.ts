@@ -11,8 +11,7 @@ import { blue, dim, magenta, red, reset, underscore, yellow } from './src/util';
 
     switch(process.argv[2]){
         case 'init': await init(); break;
-        // TODO: mudar false para true 👇
-        case 'build': await build(false); break;
+        case 'build': await build(true); break;
         case 'watch': await watch(); break;
         case 'help': help(true); break;
         case 'about': about(); break;
