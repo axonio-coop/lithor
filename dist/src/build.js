@@ -19,7 +19,6 @@ const html_minifier_1 = require("html-minifier");
 const compile_1 = __importDefault(require("./compile"));
 const util_1 = require("./util");
 const typescript_1 = require("typescript");
-let main = '';
 let commands = {};
 function default_1(isProd) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -31,16 +30,11 @@ function default_1(isProd) {
             let time = Date.now();
             let files = yield (0, promises_1.readdir)(config.paths.commands);
             files = files.filter(file => {
-                if (file.endsWith('.lithor.js'))
-                    return false;
                 if (!['.js', '.ts'].includes((0, path_1.extname)(file))) {
                     (0, util_1.warning)(`${util_1.yellow}${file}${util_1.reset} isn't in a valid file type.`);
                     return false;
                 }
-                if ([
-                    config.commands.title.name,
-                    config.commands.content,
-                ].includes(getCommandName(file))) {
+                if (Object.values(config.commands).includes(getCommandName(file))) {
                     (0, util_1.warning)(`${util_1.yellow}${name}${util_1.reset} is a reserved command name.`);
                     return false;
                 }
@@ -51,30 +45,30 @@ function default_1(isProd) {
                 try {
                     let name = getCommandName(file);
                     let ext = (0, path_1.extname)(file);
+                    let command;
                     if (ext == '.js') {
                         let path = (0, path_1.join)(config.paths.commands, file);
                         delete require.cache[require.resolve(path)];
-                        commands[name] = require(path);
+                        command = require(path);
                     }
                     if (ext == '.ts') {
                         let { outputText, diagnostics } = (0, typescript_1.transpileModule)(yield (0, promises_1.readFile)((0, path_1.join)(config.paths.commands, file), 'utf-8'), {});
                         for (let diagnostic of diagnostics !== null && diagnostics !== void 0 ? diagnostics : []) {
                             (0, util_1.error)((0, typescript_1.flattenDiagnosticMessageText)(diagnostic.messageText, '\n'));
                         }
-                        let path = (0, path_1.join)(config.paths.commands, `${(0, path_1.basename)(file, ext)}.lithor.js`);
+                        let path = (0, path_1.join)(config.paths.commands, `${(0, path_1.basename)(file, ext)}.tmp.js`);
                         yield (0, promises_1.writeFile)(path, outputText);
                         delete require.cache[require.resolve(path)];
-                        commands[name] = require(path).default;
+                        command = require(path).default;
                     }
+                    if (typeof command == 'function')
+                        commands[name] = command;
                 }
                 catch (err) {
                     (0, util_1.error)(`Couldn\'t import ${util_1.red}${file}${util_1.reset}!\n    ${err}`);
                 }
             }
             (0, util_1.info)(`${Object.keys(commands).length} command${Object.keys(commands).length == 1 ? '' : 's'} loaded. ${stopwatch(time)}`, false);
-            time = Date.now();
-            main = (yield render(yield (0, promises_1.readFile)(config.paths.main, 'utf-8'), config, (0, path_1.basename)(config.paths.main))).content;
-            (0, util_1.info)(`Main template loaded. ${stopwatch(time)}`, false);
             time = Date.now();
             yield (0, promises_1.rm)(config.paths.build, { recursive: true, force: true });
             yield (0, promises_1.mkdir)(config.paths.build);
@@ -109,10 +103,7 @@ function buildPage(relativePath, config, isProd) {
             return;
         }
         let html = yield (0, promises_1.readFile)(fullPath, 'utf-8');
-        let { title, content } = yield render(html, config, relativePath);
-        html = main
-            .replace(`<!-- #${config.commands.title.name} -->`, config.commands.title.template(title))
-            .replace(`<!-- #${config.commands.content} -->`, content);
+        html = yield render(html, undefined, config, relativePath);
         let parents = relativePath.split(path_1.sep);
         let name = parents.pop();
         if (name != 'index.html')
@@ -129,52 +120,75 @@ function buildPage(relativePath, config, isProd) {
         (0, util_1.info)(`  ${(_a = parents[parents.length - 1]) !== null && _a !== void 0 ? _a : 'Root page'} built.`, false);
     });
 }
-const COMMENT_REGEX = /<!-- #([A-Z0-9_]+)(: ((.|\r|\n)*?))? -->/g;
-function render(html, config, file) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let title = '';
-        let promises = [];
-        html.replace(COMMENT_REGEX, str => {
-            promises.push(execute(str, config, file));
-            return str;
-        });
-        let data = yield Promise.all(promises);
-        let content = html.replace(COMMENT_REGEX, () => {
-            let { type, content } = data.shift();
-            if (type == 'title') {
-                title = content;
-                return '';
-            }
-            return content;
-        });
-        return { title, content };
-    });
+const COMMENT_REGEX = /<!-- #([A-Z0-9_]+)(?:: ((?:.|\r|\n)*?))? -->/g;
+function cmdRegex(command) {
+    return command
+        .toUpperCase()
+        .replace(/[^A-Z0-9_]/g, '')
+        .replace(/[\\^$*+?.()|[\]{}]/g, '\\$&');
 }
-function execute(comment, config, file) {
+function render(html, data, config, file) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        let matches = (_a = COMMENT_REGEX.exec(comment)) !== null && _a !== void 0 ? _a : [];
+        let promises = [];
+        html.replace(COMMENT_REGEX, str => {
+            promises.push(execute(str, data, config, file));
+            return str;
+        });
+        let results = yield Promise.all(promises);
+        html = html.replace(COMMENT_REGEX, () => results.shift());
+        let extendsRegex = new RegExp(`<!-- #${cmdRegex(config.commands.extends)}: (.+?) -->`);
+        let mother = (_a = extendsRegex.exec(html)) === null || _a === void 0 ? void 0 : _a[1];
+        if (mother) {
+            html = html.replace(extendsRegex, '');
+            let motherHtml = yield getTemplate(mother, config);
+            let sections = {};
+            let sectionCmd = cmdRegex(config.commands.section);
+            for (let section of html.split(new RegExp(`(?=<!-- #${sectionCmd}: .+? -->)`, 'g')).slice(1)) {
+                let name = new RegExp(`<!-- #${sectionCmd}: (.+?) -->`).exec(section)[1];
+                let content = section.replace(new RegExp(`<!-- #${sectionCmd}: .+? -->`), '');
+                sections[name] = content;
+            }
+            let yieldCmd = cmdRegex(config.commands.yield);
+            motherHtml = motherHtml.replace(new RegExp(`<!-- #${yieldCmd} -->`, 'g'), html);
+            motherHtml = motherHtml.replace(new RegExp(`<!-- #${yieldCmd}: (.+?) -->`, 'g'), (_, section) => { var _a; return (_a = sections[section]) !== null && _a !== void 0 ? _a : ''; });
+            return motherHtml;
+        }
+        return html;
+    });
+}
+function execute(comment, data, config, file) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        let [, command, args] = COMMENT_REGEX.exec(comment);
         COMMENT_REGEX.lastIndex = 0;
-        let command = matches[1];
-        let args = matches[3];
-        if (command == config.commands.title.name && args)
-            return { type: 'title', content: args };
-        if (!(command in commands) ||
-            typeof commands[command] != 'function')
-            return { type: 'result', content: comment };
+        if (command == config.commands.include)
+            return (_a = yield getTemplate(args, config)) !== null && _a !== void 0 ? _a : comment;
+        if (Object.values(config.commands).includes(command))
+            return comment;
+        if (!(command in commands)) {
+            (0, util_1.warning)(`${util_1.yellow}${command}${util_1.reset} is not a known command.`);
+            return comment;
+        }
         try {
-            let result = commands[command](args, {
-                config,
-                render: (html) => __awaiter(this, void 0, void 0, function* () { return yield render(html, config, file); })
-            });
+            let result = commands[command](args, { config, data });
             if (result instanceof Promise)
                 result = yield result;
-            return { type: 'result', content: result };
+            return result;
         }
         catch (err) {
             (0, util_1.error)(`${util_1.red}${command}${util_1.reset} ${util_1.dim}${file}${util_1.reset}\n  ${err}`, false);
-            return { type: 'result', content: comment };
+            return comment;
         }
+    });
+}
+function getTemplate(args, config) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let [, template, data] = /^(.+?)(?: (.+))?$/.exec(args);
+        template += '.html';
+        let path = (0, path_1.join)(config.paths.templates, template);
+        let html = yield (0, promises_1.readFile)(path, 'utf-8');
+        return yield render(html, eval === null || eval === void 0 ? void 0 : eval(`"use strict";(${data})`), config, template);
     });
 }
 function stopwatch(last, now) {

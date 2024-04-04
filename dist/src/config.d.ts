@@ -1,11 +1,10 @@
 export interface Configuration {
     name: string;
     commands: {
-        title: {
-            name: string;
-            template: (title: string) => string;
-        };
-        content: string;
+        extends: string;
+        section: string;
+        yield: string;
+        include: string;
     };
     paths: {
         build: string;
@@ -14,7 +13,6 @@ export interface Configuration {
         src: string;
         pages: string;
         templates: string;
-        main: string;
     };
     watch: {
         port: number;

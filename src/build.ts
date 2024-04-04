@@ -7,7 +7,6 @@ import { dim, error, filterConflicts, info, red, reset, success, warning, yellow
 import { flattenDiagnosticMessageText, transpileModule } from 'typescript';
 import { Context } from '..';
 
-let main = '';
 let commands: { [command: string]: (args: string, ctx: Context)=>string|Promise<string> } = {};
 
 export default async function(isProd: boolean){
@@ -27,8 +26,6 @@ export default async function(isProd: boolean){
 
         files = files.filter(file=>{
 
-            if(file.endsWith('.lithor.js')) return false;
-
             // allowed extensions
             if(!['.js', '.ts'].includes(extname(file))){
                 warning(`${yellow}${file}${reset} isn't in a valid file type.`)
@@ -36,10 +33,7 @@ export default async function(isProd: boolean){
             }
 
             // reserved names
-            if([
-                config.commands.title.name,
-                config.commands.content,
-            ].includes(getCommandName(file))){
+            if(Object.values(config.commands).includes(getCommandName(file))){
                 warning(`${yellow}${name}${reset} is a reserved command name.`);
                 return false;
             }
@@ -53,13 +47,14 @@ export default async function(isProd: boolean){
         for(let file of files){
             try{
 
-            let name = getCommandName(file);
-            let ext = extname(file);
+                let name = getCommandName(file);
+                let ext = extname(file);
+                let command;
 
                 if(ext == '.js'){
                     let path = join(config.paths.commands, file);
                     delete require.cache[require.resolve(path)];
-                    commands[name] = require(path);
+                    command = require(path);
                 }
                 
                 if(ext == '.ts'){
@@ -74,23 +69,20 @@ export default async function(isProd: boolean){
 
                     // save and load as js
                     
-                    let path = join(config.paths.commands, `${basename(file, ext)}.lithor.js`);
+                    let path = join(config.paths.commands, `${basename(file, ext)}.tmp.js`);
                     await writeFile(path, outputText);
                     delete require.cache[require.resolve(path)];
-                    commands[name] = require(path).default;
+                    command = require(path).default;
 
                 }
+
+                if(typeof command == 'function')
+                    commands[name] = command;
                 
             }catch(err: any){ error(`Couldn\'t import ${red}${file}${reset}!\n    ${err}`) }
         }
 
         info(`${Object.keys(commands).length} command${Object.keys(commands).length == 1 ? '' : 's'} loaded. ${stopwatch(time)}`, false);
-        time = Date.now();
-
-        // load main
-        main = (await render(await readFile(config.paths.main, 'utf-8'), config, basename(config.paths.main))).content;
-
-        info(`Main template loaded. ${stopwatch(time)}`, false);
         time = Date.now();
 
         // wipe build dir
@@ -140,10 +132,7 @@ async function buildPage(relativePath: string, config: Configuration, isProd: bo
 
     // get page content
     let html = await readFile(fullPath, 'utf-8');
-    let { title, content } = await render(html, config, relativePath);
-    html = main
-        .replace(`<!-- #${config.commands.title.name} -->`, config.commands.title.template(title))
-        .replace(`<!-- #${config.commands.content} -->`, content);
+    html = await render(html, undefined, config, relativePath);
     
     // find where to place
     let parents = relativePath.split(sep);
@@ -170,72 +159,110 @@ async function buildPage(relativePath: string, config: Configuration, isProd: bo
 
 }
 
-interface CommandResult {
-    type: 'result'|'title';
-    content: string;
+const COMMENT_REGEX = /<!-- #([A-Z0-9_]+)(?:: ((?:.|\r|\n)*?))? -->/g;
+
+function cmdRegex(command: string){
+    return command
+        .toUpperCase()
+        .replace(/[^A-Z0-9_]/g, '')
+        .replace(/[\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-const COMMENT_REGEX = /<!-- #([A-Z0-9_]+)(: ((.|\r|\n)*?))? -->/g;
+async function render(html: string, data: any, config: Configuration, file: string): Promise<string> {
 
-async function render(html: string, config: Configuration, file: string){
+    // execute commands
 
-    let title = '';
-
-    let promises: Promise<CommandResult>[] = [];
+    let promises: Promise<string>[] = [];
     html.replace(COMMENT_REGEX, str=>{
-        promises.push(execute(str, config, file));
+        promises.push(execute(str, data, config, file));
         return str;
     });
-    let data = await Promise.all(promises);
+    let results = await Promise.all(promises);
 
-    let content = html.replace(COMMENT_REGEX, ()=>{
+    html = html.replace(COMMENT_REGEX, ()=>results.shift()!);
 
-        let { type, content } = data.shift()!;
+    // extends / section
 
-        if(type == 'title'){
-            title = content;
-            return '';
+    let extendsRegex = new RegExp(`<!-- #${cmdRegex(config.commands.extends)}: (.+?) -->`);
+    let mother = extendsRegex.exec(html)?.[1];
+    if(mother){
+
+        html = html.replace(extendsRegex, '');
+        
+        // get mother
+
+        let motherHtml = await getTemplate(mother, config);
+
+        // find sections
+
+        let sections: { [name: string]: string } = {};
+
+        let sectionCmd = cmdRegex(config.commands.section);
+        for(let section of html.split(new RegExp(`(?=<!-- #${sectionCmd}: .+? -->)`, 'g')).slice(1)){
+            let name = new RegExp(`<!-- #${sectionCmd}: (.+?) -->`).exec(section)![1];
+            let content = section.replace(new RegExp(`<!-- #${sectionCmd}: .+? -->`), '');
+            sections[name] = content;
         }
 
-        return content;
-    });
+        // yield sections
 
-    return { title, content }
+        let yieldCmd = cmdRegex(config.commands.yield);
+
+        // generic yield
+        motherHtml = motherHtml.replace(new RegExp(`<!-- #${yieldCmd} -->`, 'g'), html)
+
+        // specific yield
+        motherHtml = motherHtml.replace(
+            new RegExp(`<!-- #${yieldCmd}: (.+?) -->`, 'g'),
+            (_, section) => sections[section] ?? ''
+        );
+
+        return motherHtml;
+    }
+
+    return html;
 }
 
-async function execute(comment: string, config: Configuration, file: string): Promise<CommandResult> {
+async function execute(comment: string, data: any, config: Configuration, file: string){
 
-    let matches = COMMENT_REGEX.exec(comment) ?? [];
+    let [, command, args ] = COMMENT_REGEX.exec(comment)!;
     COMMENT_REGEX.lastIndex = 0;
 
-    let command = matches[1];
-    let args = matches[3];
+    if(command == config.commands.include)
+        return await getTemplate(args, config) ?? comment;
 
-    if(command == config.commands.title.name && args)
-        return { type: 'title', content: args };
+    if(Object.values(config.commands).includes(command))
+        return comment;
 
-    if(
-        !(command in commands) ||
-        typeof commands[command] != 'function'
-    ) return { type: 'result', content: comment };
+    if(!(command in commands)){
+        warning(`${yellow}${command}${reset} is not a known command.`);
+        return comment;
+    }
 
     try{
 
-        let result = commands[command](args, {
-            config,
-            render: async html=>await render(html, config, file)
-        });
+        let result = commands[command](args, { config, data });
 
         if(result instanceof Promise)
             result = await result;
         
-        return { type: 'result', content: result };
+        return result;
 
     }catch(err: any){
         error(`${red}${command}${reset} ${dim}${file}${reset}\n  ${err}`, false);
-        return { type: 'result', content: comment };
+        return comment;
     }
     
+}
+
+async function getTemplate(args: string, config: Configuration){
+
+    let [, template, data ] = /^(.+?)(?: (.+))?$/.exec(args)!;
+    template += '.html';
+
+    let path = join(config.paths.templates, template);
+    let html = await readFile(path, 'utf-8');
+    return await render(html, eval?.(`"use strict";(${data})`), config, template);
 }
 
 function stopwatch(last: number, now?: number){

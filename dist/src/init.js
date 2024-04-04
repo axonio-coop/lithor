@@ -70,13 +70,13 @@ function init() {
         for (let dir of ['build', 'public', 'commands', 'src/pages', 'src/templates', `src/${script}`, `src/${style}`])
             yield (0, promises_1.mkdir)((0, path_1.join)(root, dir), { recursive: true });
         yield (0, promises_1.writeFile)((0, path_1.join)(root, '.gitignore'), 'node_modules');
-        yield copySample(`commands/template.${script}`, root);
         yield copySample(`commands/eval.${script}`, root);
+        yield copySample(`commands/title.${script}`, root);
         yield copySample('public/favicon.ico', root);
         yield copySample('src/pages/index.html', root);
+        yield copySample('src/templates/main.html', root);
         yield copySample(`src/${script}/script.${script}`, root);
         yield copySample(`src/${style}/style.${style}`, root);
-        yield copySample('src/main.html', root);
         yield (0, promises_1.writeFile)((0, path_1.join)(root, 'lithor.json'), JSON.stringify({
             $schema: 'https://unpkg.com/lithor/assets/schema.json',
             name: (0, path_1.basename)(root)

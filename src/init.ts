@@ -77,13 +77,13 @@ export default async function init(){
         await mkdir(join(root, dir), { recursive: true });
 
     await writeFile(join(root, '.gitignore'), 'node_modules');
-    await copySample(`commands/template.${script}`, root);
     await copySample(`commands/eval.${script}`, root);
+    await copySample(`commands/title.${script}`, root);
     await copySample('public/favicon.ico', root);
     await copySample('src/pages/index.html', root);
+    await copySample('src/templates/main.html', root);
     await copySample(`src/${script}/script.${script}`, root);
     await copySample(`src/${style}/style.${style}`, root);
-    await copySample('src/main.html', root);
     await writeFile(join(root, 'lithor.json'), JSON.stringify({
         $schema: 'https://unpkg.com/lithor/assets/schema.json',
         name: basename(root)

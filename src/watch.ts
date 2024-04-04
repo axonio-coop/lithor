@@ -56,7 +56,7 @@ export default function(){ return new Promise(async ()=>{
 
     let watcher = watch([
         config.paths.commands,
-        config.paths.main,
+        config.paths.templates,
         config.paths.pages,
         config.paths.public,
         config.paths.src,

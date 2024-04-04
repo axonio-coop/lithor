@@ -5,11 +5,10 @@ import { reset, warning, yellow } from './util';
 export interface Configuration {
     name: string;
     commands: {
-        title: {
-            name: string;
-            template: (title: string) => string;
-        },
-        content: string;
+        extends: string;
+        section: string;
+        yield: string;
+        include: string;
     },
     paths: {
         build: string;
@@ -18,7 +17,6 @@ export interface Configuration {
         src: string;
         pages: string;
         templates: string;
-        main: string;
     }
     watch: {
         port: number;
@@ -50,11 +48,10 @@ export default async function loadConfig(): Promise<Configuration> {
     config = {
         name: config?.name ?? basename(root),
         commands: {
-            title: {
-                name: config?.commands?.title?.name ?? 'TITLE',
-                template: config?.commands?.title?.template ?? '$title$ · $name$'
-            },
-            content: config?.commands?.content ?? 'CONTENT'
+            extends: config?.commands?.extends ?? 'EXTENDS',
+            section: config?.commands?.section ?? 'SECTION',
+            yield: config?.commands?.yield ?? 'YIELD',
+            include: config?.commands?.include ?? 'INCLUDE'
         },
         paths: {
             build: config?.path?.build ?? './build',
@@ -62,8 +59,7 @@ export default async function loadConfig(): Promise<Configuration> {
             public: config?.path?.public ?? './public',
             src: config?.path?.src ?? './src',
             pages: config?.path?.pages ?? '$src$/pages',
-            templates: config?.path?.templates ?? '$src$/templates',
-            main: config?.path?.main ?? '$src$/main.html'
+            templates: config?.path?.templates ?? '$src$/templates'
         },
         watch: {
             port: config?.watch?.port ?? 8080,
@@ -75,15 +71,10 @@ export default async function loadConfig(): Promise<Configuration> {
     return {
         name: config.name,
         commands: {
-            title: {
-                name: config.commands.title.name.toUpperCase(),
-                template: (title: string)=>title == ''
-                    ? config.name
-                    : config.commands.title.template
-                        .replace('$title$', title)
-                        .replace('$name$', config.name)
-            },
-            content: config.commands.content
+            extends: config.commands.extends,
+            section: config.commands.section,
+            yield: config.commands.yield,
+            include: config.commands.include
         },
         paths: {
             build: join(root, config.paths.build.replace('$src$', config.paths.src)),
@@ -92,7 +83,6 @@ export default async function loadConfig(): Promise<Configuration> {
             src: join(root, config.paths.src),
             pages: join(root, config.paths.pages.replace('$src$', config.paths.src)),
             templates: join(root, config.paths.templates.replace('$src$', config.paths.src)),
-            main: join(root, config.paths.main.replace('$src$', config.paths.src))
         },
         watch: {
             port: config.watch.port,

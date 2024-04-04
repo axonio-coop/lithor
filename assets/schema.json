@@ -14,29 +14,31 @@
             "title": "Commands",
             "type": "object",
             "properties": {
-                "title": {
-                    "title": "Title Command",
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "title": "Title Command Name",
-                            "description": "Define how should the title command be called. Only accepts A to Z 0 to 9 and _ characters.",
-                            "default": "TITLE",
-                            "type": "string",
-                            "pattern": "^[A-Z0-9_]+$"
-                        },
-                        "template": {
-                            "title": "Title Templace",
-                            "description": "Define how the title displays. You can use these variables:\n* `$title$`: Page title\n* `$name$`: Project name",
-                            "default": "$title$ · $name$",
-                            "type": "string"
-                        }
-                    }
+                "extends": {
+                    "title": "Extends Command Name",
+                    "description": "Define how should the extends command be called. Only accepts A to Z 0 to 9 and _ characters.",
+                    "default": "EXTENDS",
+                    "type": "string",
+                    "pattern": "^[A-Z0-9_]+$"
                 },
-                "content": {
-                    "title": "Content Command Name",
-                    "description": "Define how should the content command be called. Only accepts A to Z 0 to 9 and _ characters.",
-                    "default": "CONTENT",
+                "section": {
+                    "title": "Section Command Name",
+                    "description": "Define how should the section command be called. Only accepts A to Z 0 to 9 and _ characters.",
+                    "default": "SECTION",
+                    "type": "string",
+                    "pattern": "^[A-Z0-9_]+$"
+                },
+                "yield": {
+                    "title": "Yield Command Name",
+                    "description": "Define how should the yield command be called. Only accepts A to Z 0 to 9 and _ characters.",
+                    "default": "YIELD",
+                    "type": "string",
+                    "pattern": "^[A-Z0-9_]+$"
+                },
+                "include": {
+                    "title": "Include Command Name",
+                    "description": "Define how should the include command be called. Only accepts A to Z 0 to 9 and _ characters.",
+                    "default": "INCLUDE",
                     "type": "string",
                     "pattern": "^[A-Z0-9_]+$"
                 }
@@ -48,25 +50,25 @@
                 "build": {
                     "title": "Build Directory Path",
                     "description": "Define where the build directory is located. You can use this variable:\n`$src$` - Source directory path",
-                    "default": "./build",
+                    "default": "build",
                     "type": "string"
                 },
                 "commands": {
                     "title": "Commands Directory Path",
                     "description": "Define where the commands directory is located. You can use this variable:\n`$src$` - Source directory path",
-                    "default": "./commands",
+                    "default": "commands",
                     "type": "string"
                 },
                 "public": {
                     "title": "Public Directory Path",
                     "description": "Define where the public directory is located. You can use this variable:\n`$src$` - Source directory path",
-                    "default": "./public",
+                    "default": "public",
                     "type": "string"
                 },
                 "src": {
                     "title": "Source Directory Path",
                     "description": "Define where the source directory is located.",
-                    "default": "./src",
+                    "default": "src",
                     "type": "string"
                 },
                 "pages": {
@@ -79,12 +81,6 @@
                     "title": "Templates Directory Path",
                     "description": "Define where the templates directory is located. You can use this variable:\n`$src$` - Source directory path",
                     "default": "$src$/templates",
-                    "type": "string"
-                },
-                "main": {
-                    "title": "Build Directory Path",
-                    "description": "Define where the main template is located. You can use this variable:\n`$src$` - Source directory path",
-                    "default": "$src$/main.html",
                     "type": "string"
                 }
             }

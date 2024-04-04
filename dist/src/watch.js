@@ -50,7 +50,7 @@ function default_1() {
         wss.on('close', () => clearInterval(aliveCheck));
         let watcher = (0, chokidar_1.watch)([
             config.paths.commands,
-            config.paths.main,
+            config.paths.templates,
             config.paths.pages,
             config.paths.public,
             config.paths.src,

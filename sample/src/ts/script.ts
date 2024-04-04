@@ -5,7 +5,7 @@ const SPEED = .02;
 const BG_COLOR = '#11111b';
 const COLOR = '#181825';
 const MOUSE_SIZE = 100;
-const MOUSE_COLOR = '#313244';
+const MOUSE_COLOR = '#585b70';
 const MOUSE_FADE_SPEED = .005;
 const ANGLE = 15;
 
