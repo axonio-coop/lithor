@@ -24,7 +24,7 @@ const util_1 = require("./src/util");
             yield (0, init_1.default)();
             break;
         case 'build':
-            yield (0, build_1.default)(false);
+            yield (0, build_1.default)(true);
             break;
         case 'watch':
             yield (0, watch_1.default)();

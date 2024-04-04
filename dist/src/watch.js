@@ -50,12 +50,12 @@ function default_1() {
         wss.on('close', () => clearInterval(aliveCheck));
         let watcher = (0, chokidar_1.watch)([
             config.paths.commands,
-            config.paths.templates,
-            config.paths.pages,
             config.paths.public,
             config.paths.src,
+            config.paths.pages,
+            config.paths.templates
         ], {
-            ignored: file => file.endsWith('.lithor.js'),
+            ignored: file => file.endsWith('.tmp.js'),
             ignoreInitial: true
         });
         function handleChange() {

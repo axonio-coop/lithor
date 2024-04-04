@@ -56,12 +56,12 @@ export default function(){ return new Promise(async ()=>{
 
     let watcher = watch([
         config.paths.commands,
-        config.paths.templates,
-        config.paths.pages,
         config.paths.public,
         config.paths.src,
+        config.paths.pages,
+        config.paths.templates
     ], {
-        ignored: file=>file.endsWith('.lithor.js'),
+        ignored: file=>file.endsWith('.tmp.js'),
         ignoreInitial: true
     });
 

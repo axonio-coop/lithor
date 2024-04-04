@@ -26,6 +26,8 @@ export default async function(isProd: boolean){
 
         files = files.filter(file=>{
 
+            if(file.endsWith('.tmp.js')) return false;
+
             // allowed extensions
             if(!['.js', '.ts'].includes(extname(file))){
                 warning(`${yellow}${file}${reset} isn't in a valid file type.`)

@@ -30,6 +30,8 @@ function default_1(isProd) {
             let time = Date.now();
             let files = yield (0, promises_1.readdir)(config.paths.commands);
             files = files.filter(file => {
+                if (file.endsWith('.tmp.js'))
+                    return false;
                 if (!['.js', '.ts'].includes((0, path_1.extname)(file))) {
                     (0, util_1.warning)(`${util_1.yellow}${file}${util_1.reset} isn't in a valid file type.`);
                     return false;
