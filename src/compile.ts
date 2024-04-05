@@ -131,7 +131,7 @@ async function compileCSS(config: Configuration, isProd: boolean){
         try{
             
             // compile scss
-            if(file.startsWith('sass'))
+            if(file.endsWith('.scss'))
                 css = sass.compileString(css).css;
 
             // autoprefixer

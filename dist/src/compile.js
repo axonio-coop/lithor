@@ -124,7 +124,7 @@ function compileCSS(config, isProd) {
         for (let file of files) {
             let css = yield (0, promises_1.readFile)((0, path_1.join)(config.paths.src, file), 'utf-8');
             try {
-                if (file.startsWith('sass'))
+                if (file.endsWith('.scss'))
                     css = sass_1.default.compileString(css).css;
                 css = (yield (0, postcss_1.default)([autoprefixer_1.default]).process(css, {
                     from: file,
