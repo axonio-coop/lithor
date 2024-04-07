@@ -6,6 +6,7 @@ import compile from './compile';
 import { dim, error, filterConflicts, info, red, reset, success, warning, yellow } from './util';
 import { flattenDiagnosticMessageText, transpileModule } from 'typescript';
 import { Context } from '..';
+import { parse as marked } from 'marked';
 
 let commands: { [command: string]: (args: string, ctx: Context)=>string|Promise<string> } = {};
 
@@ -134,6 +135,10 @@ async function buildPage(relativePath: string, config: Configuration, isProd: bo
 
     // get page content
     let html = await readFile(fullPath, 'utf-8');
+
+    if(fullPath.endsWith('.md'))
+        html = marked(html) as string;
+
     html = await render(html, undefined, config, relativePath);
     
     // find where to place

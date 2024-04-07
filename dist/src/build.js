@@ -19,6 +19,7 @@ const html_minifier_1 = require("html-minifier");
 const compile_1 = __importDefault(require("./compile"));
 const util_1 = require("./util");
 const typescript_1 = require("typescript");
+const marked_1 = require("marked");
 let commands = {};
 function default_1(isProd) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -105,6 +106,8 @@ function buildPage(relativePath, config, isProd) {
             return;
         }
         let html = yield (0, promises_1.readFile)(fullPath, 'utf-8');
+        if (fullPath.endsWith('.md'))
+            html = (0, marked_1.parse)(html);
         html = yield render(html, undefined, config, relativePath);
         let parents = relativePath.split(path_1.sep);
         let name = parents.pop();
