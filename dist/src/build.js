@@ -20,6 +20,7 @@ const compile_1 = __importDefault(require("./compile"));
 const util_1 = require("./util");
 const typescript_1 = require("typescript");
 const marked_1 = require("marked");
+const fs_1 = require("fs");
 let commands = {};
 function default_1(isProd) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -106,13 +107,12 @@ function buildPage(relativePath, config, isProd) {
             return;
         }
         let html = yield (0, promises_1.readFile)(fullPath, 'utf-8');
-        if (fullPath.endsWith('.md'))
-            html = (0, marked_1.parse)(html);
         html = yield render(html, undefined, config, relativePath);
         let parents = relativePath.split(path_1.sep);
         let name = parents.pop();
-        if (name != 'index.html')
-            parents.push((0, path_1.basename)(name, (0, path_1.extname)(name)));
+        name = (0, path_1.basename)(name, (0, path_1.extname)(name));
+        if (name != 'index')
+            parents.push(name);
         yield (0, promises_1.mkdir)((0, path_1.join)(config.paths.build, ...parents), { recursive: true });
         yield (0, promises_1.writeFile)((0, path_1.join)(config.paths.build, ...parents, 'index.html'), isProd
             ? (0, html_minifier_1.minify)(html, {
@@ -135,6 +135,8 @@ function cmdRegex(command) {
 function render(html, data, config, file) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        if (file.endsWith('.md'))
+            html = (0, marked_1.parse)(html);
         let promises = [];
         html.replace(COMMENT_REGEX, str => {
             promises.push(execute(str, data, config, file));
@@ -190,11 +192,19 @@ function execute(comment, data, config, file) {
 function getTemplate(args, config) {
     return __awaiter(this, void 0, void 0, function* () {
         let [, template, data] = /^(.+?)(?: (.+))?$/.exec(args);
-        template += '.html';
-        let path = (0, path_1.join)(config.paths.templates, template);
+        let path = findTemplate(template, config);
         let html = yield (0, promises_1.readFile)(path, 'utf-8');
-        return yield render(html, eval === null || eval === void 0 ? void 0 : eval(`"use strict";(${data})`), config, template);
+        return yield render(html, eval === null || eval === void 0 ? void 0 : eval(`"use strict";(${data})`), config, (0, path_1.basename)(path));
     });
+}
+function findTemplate(template, config) {
+    let path = (0, path_1.join)(config.paths.templates, `${template}.html`);
+    if ((0, fs_1.existsSync)(path))
+        return path;
+    path = (0, path_1.join)(config.paths.templates, `${template}.md`);
+    if ((0, fs_1.existsSync)(path))
+        return path;
+    throw new Error(`Can't find template: ${template}`);
 }
 function stopwatch(last, now) {
     if (!now)

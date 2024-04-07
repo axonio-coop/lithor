@@ -7,6 +7,7 @@ import { dim, error, filterConflicts, info, red, reset, success, warning, yellow
 import { flattenDiagnosticMessageText, transpileModule } from 'typescript';
 import { Context } from '..';
 import { parse as marked } from 'marked';
+import { existsSync as exists } from 'fs';
 
 let commands: { [command: string]: (args: string, ctx: Context)=>string|Promise<string> } = {};
 
@@ -135,18 +136,13 @@ async function buildPage(relativePath: string, config: Configuration, isProd: bo
 
     // get page content
     let html = await readFile(fullPath, 'utf-8');
-
-    if(fullPath.endsWith('.md'))
-        html = marked(html) as string;
-
     html = await render(html, undefined, config, relativePath);
     
     // find where to place
     let parents = relativePath.split(sep);
     let name = parents.pop()!;
-
-    if(name != 'index.html')
-        parents.push(basename(name, extname(name)));
+    name = basename(name, extname(name));
+    if(name != 'index') parents.push(name);
 
     await mkdir(join(config.paths.build, ...parents), { recursive: true });
 
@@ -176,6 +172,11 @@ function cmdRegex(command: string){
 }
 
 async function render(html: string, data: any, config: Configuration, file: string): Promise<string> {
+
+    // markdown to html
+
+    if(file.endsWith('.md'))
+        html = marked(html) as string;
 
     // execute commands
 
@@ -265,11 +266,23 @@ async function execute(comment: string, data: any, config: Configuration, file: 
 async function getTemplate(args: string, config: Configuration){
 
     let [, template, data ] = /^(.+?)(?: (.+))?$/.exec(args)!;
-    template += '.html';
 
-    let path = join(config.paths.templates, template);
+    let path = findTemplate(template, config);
+
     let html = await readFile(path, 'utf-8');
-    return await render(html, eval?.(`"use strict";(${data})`), config, template);
+    return await render(html, eval?.(`"use strict";(${data})`), config, basename(path));
+}
+
+function findTemplate(template: string, config: Configuration){
+
+    let path = join(config.paths.templates, `${template}.html`);
+    if(exists(path)) return path;
+
+    path = join(config.paths.templates, `${template}.md`);
+    if(exists(path)) return path;
+
+    throw new Error(`Can't find template: ${template}`);
+
 }
 
 function stopwatch(last: number, now?: number){
