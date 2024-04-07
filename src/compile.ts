@@ -1,6 +1,6 @@
 import { existsSync as exists } from 'fs';
 import { Configuration } from './config';
-import { dirname, join } from 'path';
+import { dirname, join, parse } from 'path';
 import { readFile, readdir, writeFile, mkdir } from 'fs/promises';
 import { error, isDirectory, filterConflicts, info } from './util';
 import postcss from 'postcss';
@@ -131,8 +131,17 @@ async function compileCSS(config: Configuration, isProd: boolean){
         try{
             
             // compile scss
-            if(file.endsWith('.scss'))
-                css = sass.compileString(css).css;
+            if(file.endsWith('.scss')){
+
+                let loadPaths = [ dirname(join(config.paths.src, file)) ];
+                
+                let node_modules = await findNodeModules(loadPaths[0]);
+                if(node_modules)
+                    	loadPaths.push(node_modules);
+
+                css = sass.compileString(css, { loadPaths }).css;
+
+            }
 
             // autoprefixer
             css = (await postcss([ autoprefixer ]).process(css, {
@@ -159,4 +168,24 @@ async function compileCSS(config: Configuration, isProd: boolean){
 
     info(`  CSS compiled.`, false);
     
+}
+
+async function findNodeModules(path: string){
+
+    let { root } = parse(path);
+
+    do{
+
+        let nm = join(path, 'node_modules');
+
+        if(
+            exists(nm) &&
+            await isDirectory(nm)
+        ) return nm;
+
+        path = join(path, '..');
+
+    }while(path != root);
+
+    return null;
 }

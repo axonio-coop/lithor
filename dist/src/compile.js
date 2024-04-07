@@ -124,8 +124,13 @@ function compileCSS(config, isProd) {
         for (let file of files) {
             let css = yield (0, promises_1.readFile)((0, path_1.join)(config.paths.src, file), 'utf-8');
             try {
-                if (file.endsWith('.scss'))
-                    css = sass_1.default.compileString(css).css;
+                if (file.endsWith('.scss')) {
+                    let loadPaths = [(0, path_1.dirname)((0, path_1.join)(config.paths.src, file))];
+                    let node_modules = yield findNodeModules(loadPaths[0]);
+                    if (node_modules)
+                        loadPaths.push(node_modules);
+                    css = sass_1.default.compileString(css, { loadPaths }).css;
+                }
                 css = (yield (0, postcss_1.default)([autoprefixer_1.default]).process(css, {
                     from: file,
                     to: getDestination(file)
@@ -142,5 +147,18 @@ function compileCSS(config, isProd) {
             }
         }
         (0, util_1.info)(`  CSS compiled.`, false);
+    });
+}
+function findNodeModules(path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let { root } = (0, path_1.parse)(path);
+        do {
+            let nm = (0, path_1.join)(path, 'node_modules');
+            if ((0, fs_1.existsSync)(nm) &&
+                (yield (0, util_1.isDirectory)(nm)))
+                return nm;
+            path = (0, path_1.join)(path, '..');
+        } while (path != root);
+        return null;
     });
 }

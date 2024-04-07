@@ -54,12 +54,12 @@ export default async function loadConfig(): Promise<Configuration> {
             include: config?.commands?.include ?? 'INCLUDE'
         },
         paths: {
-            build: config?.path?.build ?? './build',
-            commands: config?.path?.commands ?? './commands',
-            public: config?.path?.public ?? './public',
-            src: config?.path?.src ?? './src',
-            pages: config?.path?.pages ?? '$src$/pages',
-            templates: config?.path?.templates ?? '$src$/templates'
+            build: config?.paths?.build ?? 'build',
+            commands: config?.paths?.commands ?? 'commands',
+            public: config?.paths?.public ?? 'public',
+            src: config?.paths?.src ?? 'src',
+            pages: config?.paths?.pages ?? '$src$/pages',
+            templates: config?.paths?.templates ?? '$src$/templates'
         },
         watch: {
             port: config?.watch?.port ?? 8080,
@@ -82,7 +82,7 @@ export default async function loadConfig(): Promise<Configuration> {
             public: join(root, config.paths.public.replace('$src$', config.paths.src)),
             src: join(root, config.paths.src),
             pages: join(root, config.paths.pages.replace('$src$', config.paths.src)),
-            templates: join(root, config.paths.templates.replace('$src$', config.paths.src)),
+            templates: join(root, config.paths.templates.replace('$src$', config.paths.src))
         },
         watch: {
             port: config.watch.port,
