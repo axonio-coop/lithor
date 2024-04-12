@@ -37,6 +37,8 @@ function findFiles(src, path) {
             return [];
         let res = [];
         for (let item of yield (0, promises_1.readdir)(fullPath)) {
+            if (item.startsWith('_'))
+                continue;
             if (yield (0, util_1.isDirectory)((0, path_1.join)(fullPath, item)))
                 res.push(...yield findFiles(src, (0, path_1.join)(path, item)));
             else

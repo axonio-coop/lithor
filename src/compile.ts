@@ -26,6 +26,9 @@ async function findFiles(src: string, path: string){
 
     for(let item of await readdir(fullPath)){
 
+        // ignore files starting with _
+        if(item.startsWith('_')) continue;
+
         if(await isDirectory(join(fullPath, item)))
             res.push(...await findFiles(src, join(path, item)));
         else
