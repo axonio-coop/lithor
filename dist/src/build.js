@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const promises_1 = require("fs/promises");
 const config_1 = __importDefault(require("./config"));
 const path_1 = require("path");
-const html_minifier_1 = require("html-minifier");
+const html_minifier_terser_1 = require("html-minifier-terser");
 const compile_1 = __importDefault(require("./compile"));
 const util_1 = require("./util");
 const typescript_1 = require("typescript");
@@ -98,8 +98,8 @@ function getCommandName(command) {
     return (0, path_1.basename)(command, (0, path_1.extname)(command)).toUpperCase();
 }
 function buildPage(relativePath, config, isProd) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         let fullPath = (0, path_1.join)(config.paths.pages, relativePath);
         if ((yield (0, promises_1.lstat)(fullPath)).isDirectory()) {
             for (let page of yield (0, promises_1.readdir)(fullPath))
@@ -115,7 +115,7 @@ function buildPage(relativePath, config, isProd) {
             parents.push(name);
         yield (0, promises_1.mkdir)((0, path_1.join)(config.paths.build, ...parents), { recursive: true });
         yield (0, promises_1.writeFile)((0, path_1.join)(config.paths.build, ...parents, 'index.html'), isProd
-            ? (0, html_minifier_1.minify)(html, {
+            ? yield (0, html_minifier_terser_1.minify)(html, {
                 collapseBooleanAttributes: true,
                 collapseInlineTagWhitespace: true,
                 collapseWhitespace: true,
@@ -133,8 +133,8 @@ function cmdRegex(command) {
         .replace(/[\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 function render(html, data, config, file) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         if (file.endsWith('.md'))
             html = (0, marked_1.parse)(html);
         let promises = [];
@@ -165,8 +165,8 @@ function render(html, data, config, file) {
     });
 }
 function execute(comment, data, config, file) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         let [, command, args] = COMMENT_REGEX.exec(comment);
         COMMENT_REGEX.lastIndex = 0;
         if (command == config.commands.include)

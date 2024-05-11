@@ -1,7 +1,7 @@
 import { cp, lstat, mkdir, readFile, readdir, rm, writeFile } from 'fs/promises';
 import loadConfig, { Configuration } from './config';
 import { basename, extname, join, sep } from 'path';
-import { minify } from 'html-minifier';
+import { minify } from 'html-minifier-terser';
 import compile from './compile';
 import { dim, error, filterConflicts, info, red, reset, success, warning, yellow } from './util';
 import { flattenDiagnosticMessageText, transpileModule } from 'typescript';
@@ -149,7 +149,7 @@ async function buildPage(relativePath: string, config: Configuration, isProd: bo
     await writeFile(
         join(config.paths.build, ...parents, 'index.html'),
         isProd
-        ? minify(html, {
+        ? await minify(html, {
             collapseBooleanAttributes: true,
             collapseInlineTagWhitespace: true,
             collapseWhitespace: true,
